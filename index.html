@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Modifier Selector</title>
+  <style>
+    body {
+      background-color: #0e0b07;
+      color: gold;
+      font-family: 'Garamond', serif;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      font-size: 2.5em;
+      margin-bottom: 20px;
+      text-shadow: 2px 2px #000;
+    }
+    .modifier {
+      background-color: #1a140c;
+      border: 1px solid gold;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 10px;
+      box-shadow: 0 0 10px #444;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    button {
+      background-color: gold;
+      color: black;
+      font-weight: bold;
+      border: none;
+      border-radius: 4px;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+    button:disabled {
+      background-color: #555;
+      cursor: not-allowed;
+    }
+    #summary {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 1.2em;
+    }
+    #resetBtn {
+      margin-top: 10px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>Modifier Selector</h1>
+  <div id="modifiers"></div>
+  <div id="summary">Total Selected: <span id="total">0</span>/10</div>
+  <button id="resetBtn">Reset</button>
+
+  <script>
+    const maxModifiers = 10;
+
+    const modifiers = [
+      { description: "A random chest drops 25% more items (multiplicative with other modifiers)", rarity: "Common", min: 2, max: 0 },
+      { description: "A random chest drops 45% more items (multiplicative with other modifiers)", rarity: "Rare", min: 2, max: 0 },
+      { description: "Adds a Chest that drops a rare item, an exalted item, a unique item, and a set item.", rarity: "Common", min: 0, max: 0 },
+      { description: "Adds a Chest that drops a rare weapon, an exalted weapon, and a unique weapon.", rarity: "Common", min: 0, max: 0 },
+      { description: "Adds a Chest that drops an exalted helmet, exalted body armour, exalted gloves, and exalted boots.", rarity: "Common", min: 0, max: 0 },
+      { description: "Adds a Chest that drops many Affix Shards.", rarity: "Common", min: 0, max: 0 },
+      { description: "Adds a Chest that drops many Runes and Glyphs.", rarity: "Common", min: 0, max: 0 },
+      { description: "Adds a Chest that drops several exalted helmets.", rarity: "Common", min: 0, max: 0 },
+      { description: "Adds a Chest that drops several exalted items.", rarity: "Common", min: 0, max: 0 },
+      { description: "Adds a Chest that drops several Idols.", rarity: "Common", min: 0, max: 0 },
+      { description: "Adds a Lightless Arbor Key to a Random Chest", rarity: "Common", min: 1, max: 1 },
+      { description: "Adds a Set Item to a Random Chest", rarity: "Common", min: 1, max: 0 },
+      { description: "Adds a Unique Item to a Random Chest", rarity: "Common", min: 1, max: 0 },
+      { description: "Adds a Unique Item to Every Chest", rarity: "Rare", min: 1, max: 0 },
+      { description: "Adds a Unique Weapon to a Random Chest", rarity: "Common", min: 1, max: 0 },
+      { description: "Adds additional Exalted Relic to All Chests", rarity: "Common", min: 1, max: 0 },
+      { description: "Adds an additional Exalted Item to All Chests", rarity: "Common", min: 1, max: 0 },
+      { description: "Adds an additional Glyph of Chaos to All Chests", rarity: "Common", min: 1, max: 0 },
+      { description: "Adds an additional Glyph of Despair to All Chests", rarity: "Rare", min: 1, max: 0 },
+      { description: "Adds an additional Rune of Ascendance to All Chests", rarity: "Rare", min: 2, max: 0 },
+      { description: "Adds an additional Set Item to All Chests", rarity: "Rare", min: 1, max: 0 },
+      { description: "Adds an idol to Every Chest", rarity: "Common", min: 1, max: 0 },
+      { description: "Adds many Glyphs to a Random Chest", rarity: "Common", min: 1, max: 0 },
+      { description: "Adds many Runes to a Random Chest", rarity: "Common", min: 1, max: 0 },
+      { description: "Adds several Exalted Weapons to a Random Chest", rarity: "Common", min: 1, max: 0 },
+      { description: "Adds several pieces of Exalted Jewellery to a Random Chest", rarity: "Common", min: 2, max: 0 },
+      { description: "All chests drop 15% more items (multiplicative with other modifiers)", rarity: "Common", min: 2, max: 0 },
+      { description: "All chests drop 20% more exalted items (multiplicative with other modifiers)", rarity: "Rare", min: 2, max: 0 },
+      { description: "All chests drop 30% more items (multiplicative with other modifiers)", rarity: "Rare", min: 1, max: 0 },
+      { description: "All items from Every Chest have a 20% chance to be duplicated.", rarity: "Common", min: 1, max: 0 },
+      { description: "All items from Every Chest have a 50% chance to be duplicated.", rarity: "Rare", min: 2, max: 0 },
+      { description: "Duplicates all items from a Random Chest", rarity: "Rare", min: 2, max: 0 },
+      { description: "Duplicates all unique items from every Chest", rarity: "Rare", min: 1, max: 0 },
+      { description: "Duplicates every chest", rarity: "Rare", min: 1, max: 1 },
+      { description: "Triplicates every chest", rarity: "Rare", min: 1, max: 1 }
+    ];
+
+    function render() {
+      const container = document.getElementById("modifiers");
+      const totalCount = modifiers.reduce((acc, m) => acc + m.max, 0);
+      document.getElementById("total").textContent = totalCount;
+      container.innerHTML = "";
+      modifiers.forEach((mod, i) => {
+        const div = document.createElement("div");
+        div.className = "modifier";
+        const desc = document.createElement("div");
+        desc.innerHTML = `<strong>${mod.rarity}</strong>: ${mod.description}`;
+        const controls = document.createElement("div");
+        controls.className = "controls";
+
+        const minus = document.createElement("button");
+        minus.textContent = "-";
+        minus.disabled = mod.max <= 0;
+        minus.onclick = () => { mod.max--; render(); };
+
+        const count = document.createElement("span");
+        count.textContent = mod.max;
+
+        const plus = document.createElement("button");
+        plus.textContent = "+";
+        plus.disabled = totalCount >= maxModifiers;
+        plus.onclick = () => { mod.max++; render(); };
+
+        controls.appendChild(minus);
+        controls.appendChild(count);
+        controls.appendChild(plus);
+
+        div.appendChild(desc);
+        div.appendChild(controls);
+        container.appendChild(div);
+      });
+    }
+
+    document.getElementById("resetBtn").onclick = () => {
+      modifiers.forEach(mod => mod.max = 0);
+      render();
+    };
+
+    render();
+  </script>
+</body>
+</html>
