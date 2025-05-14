@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Modifier Selector</title>
   <style>
@@ -23,15 +23,16 @@
     }
     .columns {
       display: flex;
+      flex-wrap: wrap;
       justify-content: center;
       gap: 2rem;
-      flex-wrap: wrap;
     }
     .column {
       display: flex;
       flex-direction: column;
       gap: 1rem;
-      max-width: 400px;
+      width: 30%;
+      min-width: 250px;
     }
     .group {
       border: 1px solid gold;
@@ -49,13 +50,20 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0.3rem 0;
+      padding: 0.3rem 0.5rem;
+    }
+    .modifier:nth-child(odd) {
+      background-color: #1a1a1a;
+    }
+    .modifier:nth-child(even) {
+      background-color: #2a2a2a;
     }
     .tooltip {
-      cursor: help;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      /* FIXED: Allow full description to be shown */
+      white-space: normal;
+      overflow: visible;
+      text-overflow: unset;
+      max-width: none;
     }
     .controls {
       display: flex;
@@ -82,51 +90,67 @@
       margin-left: auto;
       margin-right: auto;
     }
+    .add-chest { color: #00ffd5; }
+    .add-to-chest { color: #aad7ff; }
+    .add-to-all-chests { color: #ffb347; }
+    .multiplier { color: #a1ff0a; }
+    .item-duplication { color: #ff66cc; }
+    .chest-multiplication { color: #ff4444; }
   </style>
 </head>
 <body>
   <h1>Modifier Selector</h1>
   <div class="summary">
-    <div>Total Selected: <span id="total">0</span> / 10</div>
+    <div>Total Selected: <span id="total">0</span> / 11</div>
     <div class="meta">
       Number of Chests: <span id="totalChests">0</span><br>
       Total Multiplier: <span id="totalMult">0%</span><br>
       Total Item Duplications: <span id="itemDupes">0%</span>
     </div>
   </div>
-  <div class="columns">
-    <div class="column" id="leftColumn"></div>
-    <div class="column" id="rightColumn"></div>
-  </div>
+  <div class="columns" id="columnsContainer"></div>
   <button id="reset">Reset</button>
-
   <script>
-    const maxModifiers = 10;
+    const maxModifiers = 11;
     const modifiers = [
-      { short: "+25% random", description: "A random chest drops 25% more items", rarity: "Common", group: "mult", column: "right", mult: 25, max: 0 },
-      { short: "+45% random", description: "A random chest drops 45% more items", rarity: "Rare", group: "mult", column: "right", mult: 45, max: 0 },
-      { short: "+15% all", description: "All chests drop 15% more items", rarity: "Common", group: "mult", column: "right", mult: 15, max: 0 },
-      { short: "+20% exalted", description: "All chests drop 20% more exalted items", rarity: "Rare", group: "mult", column: "right", mult: 20, max: 0 },
-      { short: "+30% all", description: "All chests drop 30% more items", rarity: "Rare", group: "mult", column: "right", mult: 30, max: 0 },
-      { short: "+20% item dup", description: "All items from Every Chest have a 20% chance to be duplicated", rarity: "Common", group: "dupe", column: "right", dupe: 20, max: 0 },
-      { short: "+50% item dup", description: "All items from Every Chest have a 50% chance to be duplicated", rarity: "Rare", group: "dupe", column: "right", dupe: 50, max: 0 },
-      { short: "Dup 1 Chest", description: "Duplicates all items from a Random Chest", rarity: "Rare", group: "dupe", column: "right", dupe: 100, max: 0 },
-      { short: "Dup Unique", description: "Duplicates all unique items from every Chest", rarity: "Rare", group: "dupe", column: "right", max: 0 },
-      { short: "Dup Chests", description: "Duplicates every chest", rarity: "Rare", group: "chestdup", column: "left", chests: 1, max: 0 },
-      { short: "Trip Chests", description: "Triplicates every chest", rarity: "Rare", group: "chestdup", column: "left", chests: 2, max: 0 },
-      { short: "+Rare/Ex/Uni/Set Chest", description: "Adds a Chest with rare, exalted, unique, and set items", rarity: "Common", group: "addchest", column: "left", chests: 1, max: 0 },
-      { short: "+Weapon Chest", description: "Adds a Chest with rare, exalted, unique weapon", rarity: "Common", group: "addchest", column: "left", chests: 1, max: 0 },
-      { short: "+Ex Armour Chest", description: "Adds a Chest with exalted armour pieces", rarity: "Common", group: "addchest", column: "left", chests: 1, max: 0 },
-      { short: "+Affix Chest", description: "Adds a Chest with many Affix Shards", rarity: "Common", group: "addchest", column: "left", chests: 1, max: 0 },
-      { short: "+Runes/Glyphs Chest", description: "Adds a Chest with many Runes and Glyphs", rarity: "Common", group: "addchest", column: "left", chests: 1, max: 0 },
-      { short: "+Helmets Chest", description: "Adds a Chest with several exalted helmets", rarity: "Common", group: "addchest", column: "left", chests: 1, max: 0 },
-      { short: "+Exalted Chest", description: "Adds a Chest with several exalted items", rarity: "Common", group: "addchest", column: "left", chests: 1, max: 0 },
-      { short: "+Idols Chest", description: "Adds a Chest with several Idols", rarity: "Common", group: "addchest", column: "left", chests: 1, max: 0 },
-      { short: "Every +Unique", description: "Adds a Unique Item to Every Chest", rarity: "Rare", group: "unique", column: "left", max: 0 },
-      { short: "+Unique Item", description: "Adds a Unique Item to a Random Chest", rarity: "Common", group: "unique", column: "left", max: 0 },
-      { short: "+Set Item", description: "Adds a Set Item to a Random Chest", rarity: "Common", group: "unique", column: "left", max: 0 },
-      { short: "+Unique Weapon", description: "Adds a Unique Weapon to a Random Chest", rarity: "Common", group: "unique", column: "left", max: 0 }
+      { description: "A random chest drops 25% more items (multiplicative with other modifiers)", rarity: "Common", group: "Multiplier", mult: 25, max: 0 },
+      { description: "A random chest drops 45% more items (multiplicative with other modifiers)", rarity: "Rare", group: "Multiplier", mult: 45, max: 0 },
+      { description: "Adds a Chest that drops a rare item, an exalted item, a unique item, and a set item.", rarity: "Common", group: "Add Chest", chests: 1, max: 0 },
+      { description: "Adds a Chest that drops a rare weapon, an exalted weapon, and a unique weapon.", rarity: "Common", group: "Add Chest", chests: 1, max: 0 },
+      { description: "Adds a Chest that drops an exalted helmet, exalted body armour, exalted gloves, and exalted boots.", rarity: "Common", group: "Add Chest", chests: 1, max: 0 },
+      { description: "Adds a Chest that drops many Affix Shards.", rarity: "Common", group: "Add Chest", chests: 1, max: 0 },
+      { description: "Adds a Chest that drops many Runes and Glyphs.", rarity: "Common", group: "Add Chest", chests: 1, max: 0 },
+      { description: "Adds a Chest that drops several exalted helmets.", rarity: "Common", group: "Add Chest", chests: 1, max: 0 },
+      { description: "Adds a Chest that drops several exalted items.", rarity: "Common", group: "Add Chest", chests: 1, max: 0 },
+      { description: "Adds a Chest that drops several Idols.", rarity: "Common", group: "Add Chest", chests: 1, max: 0 },
+      { description: "Adds a Lightless Arbor Key to a Random Chest", rarity: "Common", group: "Add Chest", chests: 1, max: 1 },
+      { description: "Adds a Set Item to a Random Chest", rarity: "Common", group: "Add To Chest", max: 0 },
+      { description: "Adds a Unique Item to a Random Chest", rarity: "Common", group: "Add To Chest", max: 0 },
+      { description: "Adds a Unique Item to Every Chest", rarity: "Rare", group: "Add To All Chests", max: 0 },
+      { description: "Adds a Unique Weapon to a Random Chest", rarity: "Common", group: "Add To Chest", max: 0 },
+      { description: "Adds additional Exalted Relic to All Chests", rarity: "Common", group: "Add To All Chests", max: 0 },
+      { description: "Adds an additional Exalted Item to All Chests", rarity: "Common", group: "Add To All Chests", max: 0 },
+      { description: "Adds an additional Glyph of Chaos to All Chests", rarity: "Common", group: "Add To All Chests", max: 0 },
+      { description: "Adds an additional Glyph of Despair to All Chests", rarity: "Rare", group: "Add To All Chests", max: 0 },
+      { description: "Adds an additional Rune of Ascendance to All Chests", rarity: "Rare", group: "Add To All Chests", max: 0 },
+      { description: "Adds an additional Set Item to All Chests", rarity: "Rare", group: "Add To All Chests", max: 0 },
+      { description: "Adds an idol to Every Chest", rarity: "Common", group: "Add To All Chests", max: 0 },
+      { description: "Adds many Glyphs to a Random Chest", rarity: "Common", group: "Add To Chest", max: 0 },
+      { description: "Adds many Runes to a Random Chest", rarity: "Common", group: "Add To Chest", max: 0 },
+      { description: "Adds several Exalted Weapons to a Random Chest", rarity: "Common", group: "Add To Chest", max: 0 },
+      { description: "Adds several pieces of Exalted Jewellery to a Random Chest", rarity: "Common", group: "Add To Chest", max: 0 },
+      { description: "All chests drop 15% more items (multiplicative with other modifiers)", rarity: "Common", group: "Multiplier", mult: 15, max: 0 },
+      { description: "All chests drop 20% more exalted items (multiplicative with other modifiers)", rarity: "Rare", group: "Multiplier", mult: 20, max: 0 },
+      { description: "All chests drop 30% more items (multiplicative with other modifiers)", rarity: "Rare", group: "Multiplier", mult: 30, max: 0 },
+      { description: "All items from Every Chest have a 20% chance to be duplicated.", rarity: "Common", group: "Item Duplication", dupe: 20, max: 0 },
+      { description: "All items from Every Chest have a 50% chance to be duplicated.", rarity: "Rare", group: "Item Duplication", dupe: 50, max: 0 },
+      { description: "Duplicates all items from a Random Chest", rarity: "Rare", group: "Item Duplication", dupe: 100, max: 0 },
+      { description: "Duplicates all unique items from every Chest", rarity: "Rare", group: "Item Duplication", max: 0 },
+      { description: "Duplicates every chest", rarity: "Rare", group: "Chest Multiplication", multiplier: 2, max: 0 },
+      { description: "Triplicates every chest", rarity: "Rare", group: "Chest Multiplication", multiplier: 3, max: 0 }
     ];
+
+    const columnsContainer = document.getElementById("columnsContainer");
 
     function groupModifiers(mods) {
       const grouped = {};
@@ -138,46 +162,48 @@
     }
 
     function render() {
-      const leftColumn = document.getElementById("leftColumn");
-      const rightColumn = document.getElementById("rightColumn");
-      leftColumn.innerHTML = '';
-      rightColumn.innerHTML = '';
-
+      columnsContainer.innerHTML = '';
       let totalCount = 0;
+      let chestBase = 0;
+      let chestMult = 1;
       let totalMult = 0;
       let itemDupes = 0;
-      let chestMods = 0;
 
       modifiers.forEach(mod => {
         totalCount += mod.max;
         if (mod.mult) totalMult += mod.max * mod.mult;
         if (mod.dupe) itemDupes += mod.max * mod.dupe;
-        if (mod.chests) chestMods += mod.max * mod.chests;
+        if (mod.chests) chestBase += mod.max * mod.chests;
+        if (mod.multiplier) chestMult *= Math.max(1, mod.multiplier ** mod.max);
       });
+
+      const effectiveChests = Math.min(6, Math.floor(chestBase * chestMult));
 
       document.getElementById("total").textContent = totalCount;
       document.getElementById("totalMult").textContent = `${totalMult}%`;
       document.getElementById("itemDupes").textContent = `${itemDupes}%`;
-      document.getElementById("totalChests").textContent = Math.min(6, chestMods);
+      document.getElementById("totalChests").textContent = effectiveChests;
 
-      const leftGroups = groupModifiers(modifiers.filter(m => m.column === 'left'));
-      const rightGroups = groupModifiers(modifiers.filter(m => m.column === 'right'));
+      const groups = groupModifiers(modifiers);
+      const columns = [[], [], []];
+      const groupEntries = Object.entries(groups);
 
-      const renderGroup = (groupName, mods) => {
+      groupEntries.forEach(([, mods], i) => {
+        const col = columns[i % 3];
         const wrapper = document.createElement("div");
         wrapper.className = "group";
         const title = document.createElement("h2");
-        title.textContent = groupName.toUpperCase();
+        title.textContent = mods[0].group;
         wrapper.appendChild(title);
 
         mods.forEach(mod => {
           const div = document.createElement("div");
-          div.className = "modifier";
+          div.className = `modifier ${mod.group.replace(/\s+/g, '-').toLowerCase()}`;
 
           const desc = document.createElement("div");
           desc.className = "tooltip";
           desc.title = mod.description;
-          desc.innerHTML = `<strong>${mod.rarity}</strong>: ${mod.short}`;
+          desc.innerHTML = `<strong>${mod.rarity}</strong>: ${mod.description}`;
 
           const controls = document.createElement("div");
           controls.className = "controls";
@@ -204,18 +230,21 @@
           wrapper.appendChild(div);
         });
 
-        return wrapper;
-      };
+        col.push(wrapper);
+      });
 
-      Object.entries(leftGroups).forEach(([group, mods]) => leftColumn.appendChild(renderGroup(group, mods)));
-      Object.entries(rightGroups).forEach(([group, mods]) => rightColumn.appendChild(renderGroup(group, mods)));
+      columns.forEach(col => {
+        const div = document.createElement("div");
+        div.className = "column";
+        col.forEach(groupBox => div.appendChild(groupBox));
+        columnsContainer.appendChild(div);
+      });
     }
 
     document.getElementById("reset").onclick = () => {
       modifiers.forEach(mod => mod.max = 0);
       render();
     };
-
     render();
   </script>
 </body>
